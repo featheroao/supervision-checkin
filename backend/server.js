@@ -40,7 +40,7 @@ initSqlJs().then(function(SQL) {
   
   // 启动服务器
   app.listen(port, () => {
-    console.log(`✅ 服务器运行在 http://localhost:${port}`);
+    console.log(`✅ 服务器运行在 http://0.0.0.0:${port}`);
     console.log(`📁 上传目录: ${uploadsDir}`);
   });
 });

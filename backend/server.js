@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const port = 3000;
+const port = 80;
 
 // 确保uploads目录存在
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -64,6 +64,10 @@ app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
 app.use(express.static(path.join(__dirname, '../frontend')));
+
+app.get('/', (req, res) => {
+  res.redirect('/index.html');
+});
 // 打卡上传接口
 app.post('/api/checkin', upload.single('image'), (req, res) => {
   if (!req.file) {

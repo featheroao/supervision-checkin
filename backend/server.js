@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const port = 80;
+const port = 3000;
 
 // 确保uploads目录存在
 const uploadsDir = path.join(__dirname, 'uploads');

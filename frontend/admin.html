@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>监督打卡系统 - 管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f3f4f6; min-height: 100vh; }
+    .header { background: white; padding: 20px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .header h1 { color: #1f2937; font-size: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-card .number { font-size: 32px; font-weight: bold; color: #10b981; }
+    .stat-card .label { color: #6b7280; font-size: 14px; margin-top: 8px; }
+    .search-bar { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 16px; }
+    .search-bar input, .search-bar select { padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    .search-bar input { flex: 1; }
+    .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    .btn-primary { background: #10b981; color: white; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .table-container { background: white; border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 16px; text-align: left; border-bottom: 1px solid #f3f4f6; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    td { color: #4b5563; }
+    .type-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    .type-drink { background: #dbeafe; color: #1d4ed8; }
+    .type-exercise { background: #dcfce7; color: #16a34a; }
+    .type-study { background: #fef3c7; color: #d97706; }
+    .type-other { background: #f3f4f6; color: #6b7280; }
+    .image-preview { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+    .modal img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+    .empty-state { text-align: center; padding: 60px; color: #9ca3af; }
+    .loading { text-align: center; padding: 40px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 监督打卡管理后台</h1>
+  </div>
+  
+  <div class="container">
+    <div class="stats" id="stats">
+      <div class="stat-card">
+        <div class="number">0</div>
+        <div class="label">今日打卡</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">0</div>
+        <div class="label">喝水打卡</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">0</div>
+        <div class="label">运动打卡</div>
+      </div>
+      <div class="stat-card">
+        <div class="number">0</div>
+        <div class="label">学习打卡</div>
+      </div>
+    </div>
+    
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索用户ID...">
+      <select id="filterType">
+        <option value="">全部类型</option>
+        <option value="drink">喝水</option>
+        <option value="exercise">运动</option>
+        <option value="study">学习</option>
+        <option value="other">其他</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadCheckins()">刷新</button>
+    </div>
+    
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>图片</th>
+            <th>用户ID</th>
+            <th>类型</th>
+            <th>时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="checkinTable">
+          <tr><td colspan="5" class="loading">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="modal" id="imageModal" onclick="closeModal()">
+    <img id="modalImage" src="">
+  </div>
+  
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    
+    async function loadCheckins() {
+      const search = document.getElementById('searchInput').value;
+      const type = document.getElementById('filterType').value;
+      
+      try {
+        const response = await fetch(`${API_BASE}/checkins`);
+        let data = await response.json();
+        
+        // 过滤
+        if (search) {
+          data = data.filter(item => item.userId.toLowerCase().includes(search.toLowerCase()));
+        }
+        if (type) {
+          data = data.filter(item => item.type === type);
+        }
+        
+        renderTable(data);
+        updateStats(data);
+      } catch (error) {
+        document.getElementById('checkinTable').innerHTML = '<tr><td colspan="5" class="empty-state">加载失败，请检查网络</td></tr>';
+      }
+    }
+    
+    function renderTable(data) {
+      const tbody = document.getElementById('checkinTable');
+      
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无打卡记录</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = data.map(item => `
+        <tr>
+          <td><img src="${API_BASE.replace('/api', '')}/uploads/${item.imagePath}" class="image-preview" onclick="openModal('${API_BASE.replace('/api', '')}/uploads/${item.imagePath}')"></td>
+          <td>${item.userId}</td>
+          <td><span class="type-badge type-${item.type}">${getTypeLabel(item.type)}</span></td>
+          <td>${formatTime(item.timestamp)}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteCheckin(${item.id})">删除</button></td>
+        </tr>
+      `).join('');
+    }
+    
+    function getTypeLabel(type) {
+      const labels = { drink: '喝水', exercise: '运动', study: '学习', other: '其他' };
+      return labels[type] || type;
+    }
+    
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString('zh-CN');
+    }
+    
+    function updateStats(data) {
+      const today = new Date().toDateString();
+      const todayCount = data.filter(item => new Date(item.timestamp).toDateString() === today).length;
+      const drinkCount = data.filter(item => item.type === 'drink').length;
+      const exerciseCount = data.filter(item => item.type === 'exercise').length;
+      const studyCount = data.filter(item => item.type === 'study').length;
+      
+      const numbers = document.querySelectorAll('.stat-card .number');
+      numbers[0].textContent = todayCount;
+      numbers[1].textContent = drinkCount;
+      numbers[2].textContent = exerciseCount;
+      numbers[3].textContent = studyCount;
+    }
+    
+    function openModal(src) {
+      document.getElementById('modalImage').src = src;
+      document.getElementById('imageModal').style.display = 'flex';
+    }
+    
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+    
+    async function deleteCheckin(id) {
+      if (!confirm('确定要删除这条记录吗？')) return;
+      
+      try {
+        await fetch(`${API_BASE}/checkins/${id}`, { method: 'DELETE' });
+        loadCheckins();
+      } catch (error) {
+        alert('删除失败');
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCheckins();
+      document.getElementById('searchInput').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') loadCheckins();
+      });
+      document.getElementById('filterType').addEventListener('change', loadCheckins);
+    });
+  </script>
+</body>
+</html>

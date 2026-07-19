@@ -1,0 +1,33 @@
+# 前端依赖
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 打包输出
+dist/
+build/
+out/
+
+# 环境变量（防止泄露密钥）
+.env
+.env.local
+.env.development
+.env.production
+
+# 日志
+logs/
+*.log
+
+# IDE缓存
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Docker临时文件
+.docker/

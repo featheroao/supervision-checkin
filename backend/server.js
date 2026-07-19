@@ -63,6 +63,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
 
+app.use(express.static(path.join(__dirname, '../frontend')));
 // 打卡上传接口
 app.post('/api/checkin', upload.single('image'), (req, res) => {
   if (!req.file) {

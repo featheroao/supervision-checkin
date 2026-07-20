@@ -1,20 +1,23 @@
-# Go编译基础镜像
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
-# 拉取依赖
-COPY go.mod go.sum ./
-RUN go mod download
-# 复制全部源码
-COPY . .
-# 编译程序，输出名为 app 的可执行文件
-RUN CGO_ENABLED=0 go build -tags netgo -ldflags '-s -w' -o app
+FROM node:18-alpine
 
-# 轻量化运行镜像
-FROM alpine:latest
 WORKDIR /app
-# 复制编译好的程序
-COPY --from=builder /app/app .
+
+# 复制后端依赖
+COPY backend/package*.json ./backend/
+WORKDIR /app/backend
+RUN npm install --production
+
+# 复制所有代码
+WORKDIR /app
+COPY backend/ ./backend/
+COPY frontend/ ./frontend/
+
+# 创建上传目录
+RUN mkdir -p /app/backend/uploads
+
+# 设置工作目录为 backend
+WORKDIR /app/backend
 
 EXPOSE 8080
-# 启动命令
-CMD ["./app"]git add Dockerfile .dockerignore
+
+CMD ["node", "server.js"]

@@ -14,7 +14,7 @@ FROM alpine:latest
 WORKDIR /app
 # 复制编译好的程序
 COPY --from=builder /app/app .
-# 暴露端口（Sealos统一用3000，后面环境变量匹配）
-EXPOSE 3000
+
+EXPOSE 8080
 # 启动命令
 CMD ["./app"]git add Dockerfile .dockerignore

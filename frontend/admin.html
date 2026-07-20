@@ -98,13 +98,16 @@
   </div>
   
   <script>
-    const API_BASE = 'https://gowbtqmoein.sealosgzg.site:8080/api/checkin';
+    const API_BASE = 'https://gowbtqmoein.sealosgzg.site:8080/api';
+  
+    const STATIC_BASE = 'https://gowbtqmoein.sealosgzg.site:8080';
     
     async function loadCheckins() {
       const search = document.getElementById('searchInput').value;
       const type = document.getElementById('filterType').value;
       
       try {
+        // ✅ 修改3: 请求路径改为 /api/checkins
         const response = await fetch(`${API_BASE}/checkins`);
         let data = await response.json();
         
@@ -119,6 +122,7 @@
         renderTable(data);
         updateStats(data);
       } catch (error) {
+        console.error('加载失败:', error);
         document.getElementById('checkinTable').innerHTML = '<tr><td colspan="5" class="empty-state">加载失败，请检查网络</td></tr>';
       }
     }
@@ -131,15 +135,19 @@
         return;
       }
       
-      tbody.innerHTML = data.map(item => `
-        <tr>
-          <td><img src="${API_BASE.replace('/api', '')}/uploads/${item.imagePath}" class="image-preview" onclick="openModal('${API_BASE.replace('/api', '')}/uploads/${item.imagePath}')"></td>
-          <td>${item.userId}</td>
-          <td><span class="type-badge type-${item.type}">${getTypeLabel(item.type)}</span></td>
-          <td>${formatTime(item.timestamp)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteCheckin(${item.id})">删除</button></td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = data.map(item => {
+        // ✅ 修改4: 图片路径使用 STATIC_BASE
+        const imageUrl = `${STATIC_BASE}/uploads/${item.imagePath}`;
+        return `
+          <tr>
+            <td><img src="${imageUrl}" class="image-preview" onclick="openModal('${imageUrl}')"></td>
+            <td>${item.userId}</td>
+            <td><span class="type-badge type-${item.type}">${getTypeLabel(item.type)}</span></td>
+            <td>${formatTime(item.timestamp)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteCheckin(${item.id})">删除</button></td>
+          </tr>
+        `;
+      }).join('');
     }
     
     function getTypeLabel(type) {
@@ -179,9 +187,15 @@
       if (!confirm('确定要删除这条记录吗？')) return;
       
       try {
-        await fetch(`${API_BASE}/checkins/${id}`, { method: 'DELETE' });
-        loadCheckins();
+        // ✅ 修改5: 删除请求路径改为 /api/checkins/${id}
+        const response = await fetch(`${API_BASE}/checkins/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+          loadCheckins();
+        } else {
+          alert('删除失败');
+        }
       } catch (error) {
+        console.error('删除失败:', error);
         alert('删除失败');
       }
     }

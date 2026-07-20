@@ -1,3 +1,4 @@
+process.env.TZ = "Asia/Shanghai";
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
@@ -39,7 +40,7 @@ initSqlJs().then(function(SQL) {
   `);
   
   // 启动服务器
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`✅ 服务器运行在 http://0.0.0.0:${port}`);
     console.log(`📁 上传目录: ${uploadsDir}`);
   });
@@ -77,7 +78,7 @@ app.post('/api/checkin', upload.single('image'), (req, res) => {
   const { userId, type } = req.body;
   
   try {
-    db.run('INSERT INTO checkins (userId, type, imagePath) VALUES (?, ?, ?)', 
+    db.run('INSERT INTO checkins (userId, type, imagePath, timestamp) VALUES (?, ?, ?, datetime("now", "localtime"))', 
       [userId || 'unknown', type || 'drink', req.file.filename]);
     
     // 获取最后插入的ID

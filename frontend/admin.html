@@ -98,20 +98,17 @@
   </div>
   
   <script>
-    const API_BASE = 'https://gowbtqmoein.sealosgzg.site/api';
-  
-    const STATIC_BASE = 'https://gowbtqmoein.sealosgzg.site';
+    const API_BASE = '/api';
+    const STATIC_BASE = '';
     
     async function loadCheckins() {
       const search = document.getElementById('searchInput').value;
       const type = document.getElementById('filterType').value;
       
       try {
-        // ✅ 修改3: 请求路径改为 /api/checkins
         const response = await fetch(`${API_BASE}/checkins`);
         let data = await response.json();
         
-        // 过滤
         if (search) {
           data = data.filter(item => item.userId.toLowerCase().includes(search.toLowerCase()));
         }
@@ -136,8 +133,7 @@
       }
       
       tbody.innerHTML = data.map(item => {
-        // ✅ 修改4: 图片路径使用 STATIC_BASE
-        const imageUrl = `${STATIC_BASE}/uploads/${item.imagePath}`;
+        const imageUrl = `/uploads/${item.imagePath}`;
         return `
           <tr>
             <td><img src="${imageUrl}" class="image-preview" onclick="openModal('${imageUrl}')"></td>
@@ -187,7 +183,6 @@
       if (!confirm('确定要删除这条记录吗？')) return;
       
       try {
-        // ✅ 修改5: 删除请求路径改为 /api/checkins/${id}
         const response = await fetch(`${API_BASE}/checkins/${id}`, { method: 'DELETE' });
         if (response.ok) {
           loadCheckins();

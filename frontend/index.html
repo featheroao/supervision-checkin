@@ -1,4 +1,4 @@
-git add .<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -111,7 +111,7 @@ git add .<!DOCTYPE html>
       formData.append('type', checkinType.value);
       
       try {
-        const response = await fetch('https://gowbtqmoein.sealosgzg.site/api/checkin', {
+        const response = await fetch('/api/checkin', {
           method: 'POST',
           body: formData
         });
